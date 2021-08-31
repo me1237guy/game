@@ -18,9 +18,22 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT - 50
+        # add a speed propery
+        self.speedx = 8
         
     def update(self):
-        self.rect.x += 2
+        # get the state of all keyboard buttons
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_RIGHT]:
+            self.rect.x += self.speedx
+        if key_pressed[pygame.K_LEFT]:
+            self.rect.x -= self.speedx
+
+        # set player's boundary
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        elif self.rect.left < 0:
+            self.rect.left = 0   
 
 # pygame.sprite.Group():
 # A container class to hold and manage multiple Sprite objects. 
