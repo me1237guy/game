@@ -1,7 +1,9 @@
 import pygame
+import random  # for generating a bunch of rocks randomly
 
 FPS = 60
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 WIDTH = 500
 HEIGHT = 600
 pygame.init()
@@ -35,11 +37,27 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.left < 0:
             self.rect.left = 0   
 
+class Rock(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 10))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(0, WIDTH-self.rect.width)
+        self.rect.y = random.randrange(-100, -40)
+        self.speedy = 2
+    
+    def update(self):
+        self.rect.y += self.speedy
+
+
 # pygame.sprite.Group():
 # A container class to hold and manage multiple Sprite objects. 
 all_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
+rock = Rock()
+all_sprites.add(rock)
 
 running = True
 
