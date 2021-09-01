@@ -29,6 +29,8 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey(BLACK)   
         # get the rectangle of the image and then we can set its position
         self.rect = self.image.get_rect()
+        self.radius = 15
+        pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT - 50
         # add a speed propery
@@ -62,6 +64,8 @@ class Rock(pygame.sprite.Sprite):
         self.image = rock_img
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+        self.radius = 15
+        pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
         self.rect.y = random.randrange(-100, -40)
         self.speedx = random.randrange(-3, 3)
@@ -108,7 +112,7 @@ bullets = pygame.sprite.Group()
 
 player = Player()
 all_sprites.add(player)
-for i in range(8):
+for i in range(1):
     r = Rock()
     all_sprites.add(r)
     rocks.add(r)
@@ -144,7 +148,8 @@ while running:
     # Check if the player is colliding with any of rocks
     is_player_disappeared = False
     hits = pygame.sprite.spritecollide(player, rocks, 
-                                      is_player_disappeared)    
+                                      is_player_disappeared,
+                                      pygame.sprite.collide_circle)    
     if hits:
         running = False
 
