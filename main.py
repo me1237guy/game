@@ -121,12 +121,19 @@ while running:
     hits = pygame.sprite.groupcollide(rocks, bullets, 
                                are_rocks_disappeared, 
                                are_bullets_disappeared)
-                               
+
     # Add enough rocks that its amount is equal to the number of collisions                           
     for hit in hits:
         r = Rock()
         all_sprites.add(r)
         rocks.add(r)
+
+    # Check if the player is colliding with any of rocks
+    is_player_disappeared = False
+    hits = pygame.sprite.spritecollide(player, rocks, 
+                                      is_player_disappeared)    
+    if hits:
+        running = False
 
     # (3) display
     screen.fill(BLACK)
