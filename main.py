@@ -118,9 +118,15 @@ while running:
     # After all sprites update their positions, we should update the collision between rocks and bullets
     are_rocks_disappeared = True
     are_bullets_disappeared = True
-    pygame.sprite.groupcollide(rocks, bullets, 
+    hits = pygame.sprite.groupcollide(rocks, bullets, 
                                are_rocks_disappeared, 
                                are_bullets_disappeared)
+                               
+    # Add enough rocks that its amount is equal to the number of collisions                           
+    for hit in hits:
+        r = Rock()
+        all_sprites.add(r)
+        rocks.add(r)
 
     # (3) display
     screen.fill(BLACK)
