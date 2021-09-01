@@ -1,6 +1,6 @@
 import pygame
 import random  # for generating a bunch of rocks randomly
-
+import os      # get path for widnows/linux
 FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -13,11 +13,20 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("This is my first pygame.") 
 clock = pygame.time.Clock()
 
+# load images
+background_img = pygame.image.load(os.path.join("img","background.png")).convert()
+player_img = pygame.image.load(os.path.join("img","player.png")).convert()
+rock_img = pygame.image.load(os.path.join("img","rock.png")).convert()
+bullet_img = pygame.image.load(os.path.join("img","bullet.png")).convert()
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((100,20))
-        self.image.fill((0,255,0))
+        # self.image.fill((0,255,0))
+        self.image = pygame.transform.scale(player_img, (50, 38)) 
+        # set the transparent colorkey  
+        self.image.set_colorkey(BLACK)   
         # get the rectangle of the image and then we can set its position
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
@@ -49,7 +58,9 @@ class Rock(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((30, 20))
-        self.image.fill(RED)
+        # self.image.fill(RED)
+        self.image = rock_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
         self.rect.y = random.randrange(-100, -40)
@@ -71,7 +82,9 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((10, 10))
-        self.image.fill(YELLOW)
+        # self.image.fill(YELLOW)
+        self.image = bullet_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
@@ -126,7 +139,7 @@ while running:
     for hit in hits:
         r = Rock()
         all_sprites.add(r)
-        rocks.add(r)
+        rocks.add(r)  
 
     # Check if the player is colliding with any of rocks
     is_player_disappeared = False
@@ -136,8 +149,9 @@ while running:
         running = False
 
     # (3) display
-    screen.fill(BLACK)
-    
+    # screen.fill(BLACK)
+    screen.blit(background_img, (0,0))
+
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
     pygame.display.update()
