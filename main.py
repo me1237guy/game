@@ -4,6 +4,7 @@ import random  # for generating a bunch of rocks randomly
 FPS = 60
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
 WIDTH = 500
 HEIGHT = 600
 pygame.init()
@@ -30,7 +31,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.x += self.speedx
         if key_pressed[pygame.K_LEFT]:
             self.rect.x -= self.speedx
-
+        if key_pressed[pygame.K_SPACE]:
+            bullet = Bullet(self.rect.centerx, self.rect.centery)
+            all_sprites.add(bullet)
+        
         # set player's boundary
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
@@ -40,7 +44,7 @@ class Player(pygame.sprite.Sprite):
 class Rock(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 10))
+        self.image = pygame.Surface((30, 20))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
@@ -59,7 +63,22 @@ class Rock(pygame.sprite.Sprite):
             self.speedx = random.randrange(-3, 3)
             self.speedy = random.randrange(2, 10)
         
-       
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((5, 10))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.speedy = 2
+    
+    def update(self):
+        # update the rock's horizontal and vertical position
+        self.rect.y -= self.speedy
+        # reset the item that is out of the boundary
+        if self.rect.bottom < 0:
+           self.kill()    
 
 # pygame.sprite.Group():
 # A container class to hold and manage multiple Sprite objects. 
