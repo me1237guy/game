@@ -45,19 +45,30 @@ class Rock(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
         self.rect.y = random.randrange(-100, -40)
-        self.speedy = 2
+        self.speedx = random.randrange(-3, 3)
+        self.speedy = random.randrange(2, 10)
     
     def update(self):
+        # update the rock's horizontal and vertical position
+        self.rect.x += self.speedx
         self.rect.y += self.speedy
-
+        # reset the item that is out of the boundary
+        if self.rect.top > HEIGHT or self.rect.right < 0 or self.rect.left > WIDTH:
+            self.rect.x = random.randrange(0, WIDTH-self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
+            self.speedx = random.randrange(-3, 3)
+            self.speedy = random.randrange(2, 10)
+        
+       
 
 # pygame.sprite.Group():
 # A container class to hold and manage multiple Sprite objects. 
 all_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
-rock = Rock()
-all_sprites.add(rock)
+for i in range(8):
+    r = Rock()
+    all_sprites.add(r)
 
 running = True
 
