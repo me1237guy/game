@@ -31,15 +31,17 @@ class Player(pygame.sprite.Sprite):
             self.rect.x += self.speedx
         if key_pressed[pygame.K_LEFT]:
             self.rect.x -= self.speedx
-        if key_pressed[pygame.K_SPACE]:
-            bullet = Bullet(self.rect.centerx, self.rect.centery)
-            all_sprites.add(bullet)
         
         # set player's boundary
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
         elif self.rect.left < 0:
             self.rect.left = 0   
+
+    def shoot(self):
+        bullet = Bullet(self.rect.centerx, self.rect.top)
+        all_sprites.add(bullet)
+        
 
 class Rock(pygame.sprite.Sprite):
     def __init__(self):
@@ -70,15 +72,16 @@ class Bullet(pygame.sprite.Sprite):
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
-        self.rect.centery = y
+        self.rect.bottom = y
         self.speedy = 2
     
     def update(self):
         # update the rock's horizontal and vertical position
         self.rect.y -= self.speedy
-        # reset the item that is out of the boundary
+        # delete the item when it is out of the window
         if self.rect.bottom < 0:
-           self.kill()    
+           self.kill()     # this automatically removes the bullet from all_sprites
+                           # or any group which owns it 
 
 # pygame.sprite.Group():
 # A container class to hold and manage multiple Sprite objects. 
@@ -97,6 +100,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.shoot()
 
     # (2) update game
     # every update function of each item in all_sprites will be called 
