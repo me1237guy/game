@@ -2,6 +2,7 @@ import pygame
 import random  # for generating a bunch of rocks randomly
 
 FPS = 60
+BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
@@ -41,6 +42,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
+        bullets.add(bullet)
         
 
 class Rock(pygame.sprite.Sprite):
@@ -68,7 +70,7 @@ class Rock(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((5, 10))
+        self.image = pygame.Surface((10, 10))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -84,13 +86,19 @@ class Bullet(pygame.sprite.Sprite):
                            # or any group which owns it 
 
 # pygame.sprite.Group():
-# A container class to hold and manage multiple Sprite objects. 
+# A container that is used to manage multiple Sprite objects. 
 all_sprites = pygame.sprite.Group()
+# A group of rocks that is used to collects all rocks
+rocks = pygame.sprite.Group()
+# A group of bullets that is used to collect all bullets
+bullets = pygame.sprite.Group()
+
 player = Player()
 all_sprites.add(player)
 for i in range(8):
     r = Rock()
     all_sprites.add(r)
+    rocks.add(r)
 
 running = True
 
@@ -107,9 +115,15 @@ while running:
     # (2) update game
     # every update function of each item in all_sprites will be called 
     all_sprites.update()
+    # After all sprites update their positions, we should update the collision between rocks and bullets
+    are_rocks_disappeared = True
+    are_bullets_disappeared = True
+    pygame.sprite.groupcollide(rocks, bullets, 
+                               are_rocks_disappeared, 
+                               are_bullets_disappeared)
 
     # (3) display
-    screen.fill(WHITE)
+    screen.fill(BLACK)
     
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
