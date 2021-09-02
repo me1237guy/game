@@ -1,6 +1,8 @@
 import pygame
 import random  # for generating a bunch of rocks randomly
-import os      # get path for widnows/linux
+import os
+
+from pygame.transform import rotate      # get path for widnows/linux
 FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -30,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         # get the rectangle of the image and then we can set its position
         self.rect = self.image.get_rect()
         self.radius = 15
-        pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
+        # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT - 50
         # add a speed propery
@@ -59,29 +61,48 @@ class Player(pygame.sprite.Sprite):
 class Rock(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30, 20))
+        # self.image = pygame.Surface((30, 20))
         # self.image.fill(RED)
-        self.image = rock_img
-        self.image.set_colorkey(BLACK)
+        # image_orig is a copy of rock_img, and it will be used for rotation later  
+        self.image_orig = rock_img
+        self.image_orig.set_colorkey(BLACK)
+        self.image = rock_img.copy()     
         self.rect = self.image.get_rect()
         self.radius = 15
         pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
-        self.rect.y = random.randrange(-100, -40)
+        self.rect.y = random.randrange(-40, -10)
         self.speedx = random.randrange(-3, 3)
         self.speedy = random.randrange(2, 10)
-    
+        self.rotate_total = 0
+        self.rotate_deg = random.randrange(-10, 10)
+
     def update(self):
+        self.rotate()
         # update the rock's horizontal and vertical position
         self.rect.x += self.speedx
         self.rect.y += self.speedy
         # reset the item that is out of the boundary
         if self.rect.top > HEIGHT or self.rect.right < 0 or self.rect.left > WIDTH:
             self.rect.x = random.randrange(0, WIDTH-self.rect.width)
-            self.rect.y = random.randrange(-100, -40)
+            self.rect.y = random.randrange(-40, -10)
             self.speedx = random.randrange(-3, 3)
             self.speedy = random.randrange(2, 10)
-        
+            self.rotate_total = 0
+            self.rotate_deg = random.randrange(-10, 10)
+
+    def rotate(self):
+        self.rotate_total += self.rotate_deg
+        self.rotate_total = self.rotate_total % 360
+        # (1) get the center of the current surrounded rectangle
+        self.center_old = self.rect.center
+        # rotate a lossless image which is a copy of rock_img
+        self.image = pygame.transform.rotate(self.image_orig, self.rotate_total)
+        # (2) because the image rotated, its center of the surrounded rectangle has changed also
+        self.rect = self.image.get_rect()
+        # (3) modify the latest center of the surrounded rectangle with the previous value, ie. center_old
+        self.rect.center = self.center_old
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -112,7 +133,7 @@ bullets = pygame.sprite.Group()
 
 player = Player()
 all_sprites.add(player)
-for i in range(1):
+for i in range(8):
     r = Rock()
     all_sprites.add(r)
     rocks.add(r)
@@ -150,8 +171,8 @@ while running:
     hits = pygame.sprite.spritecollide(player, rocks, 
                                       is_player_disappeared,
                                       pygame.sprite.collide_circle)    
-    if hits:
-        running = False
+    # if hits:
+        # running = False
 
     # (3) display
     # screen.fill(BLACK)
