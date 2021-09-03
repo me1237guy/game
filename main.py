@@ -1,6 +1,7 @@
 import pygame
 import random  # for generating a bunch of rocks randomly
 import os
+from pygame import draw
 
 from pygame.transform import rotate      # get path for widnows/linux
 FPS = 60
@@ -24,6 +25,18 @@ rock_imgs = []
 for i in range(7):
     rock_imgs.append(pygame.image.load(os.path.join("img", f"rock{i}.png")).convert())
 bullet_img = pygame.image.load(os.path.join("img","bullet.png")).convert()
+
+font_name = pygame.font.match_font('arial')
+
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(font_name, size)
+    use_anti_arial = True
+    # draw text on a new Surface
+    text_surface = font.render(text, use_anti_arial, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.centerx = x
+    text_rect.top = y
+    surf.blit(text_surface, text_rect)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -72,7 +85,7 @@ class Rock(pygame.sprite.Sprite):
         self.image_orig.set_colorkey(BLACK)
         self.image = self.image_orig.copy()     
         self.rect = self.image.get_rect()
-        self.radius = 15
+        self.radius = int(self.rect.width * 0.85/2)
         pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.x = random.randrange(0, WIDTH-self.rect.width)
         self.rect.y = random.randrange(-180, -100)
@@ -141,6 +154,7 @@ for i in range(8):
     r = Rock()
     all_sprites.add(r)
     rocks.add(r)
+score = 0
 
 running = True
 
@@ -166,6 +180,7 @@ while running:
 
     # Add enough rocks that its amount is equal to the number of collisions                           
     for hit in hits:
+        score += hit.radius
         r = Rock()
         all_sprites.add(r)
         rocks.add(r)  
@@ -184,6 +199,7 @@ while running:
 
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
+    draw_text(screen, str(score), 50, WIDTH/2, 10)
     pygame.display.update()
 
 pygame.quit()
