@@ -7,6 +7,7 @@ from pygame.transform import rotate      # get path for widnows/linux
 FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
@@ -51,6 +52,28 @@ def draw_text(surf, text, size, x, y):
     text_rect.top = y
     surf.blit(text_surface, text_rect)
 
+def new_rock():
+    r = Rock()
+    all_sprites.add(r)
+    rocks.add(r)
+
+def draw_health(surf, health, x, y):
+    if health<0:
+        health = 0
+    BAR_LENGTH = 140
+    BAR_HEIGHT = 14
+    health_bar_length = (health/100)*BAR_LENGTH
+    outside_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    filled_rect  = pygame.Rect(x, y, health_bar_length, BAR_HEIGHT)
+    pygame.draw.rect(surf, YELLOW, outside_rect, 3)
+    # warning hints
+    if health>40:
+        pygame.Surface.fill(surf, GREEN, filled_rect)
+    else:
+        pygame.Surface.fill(surf, RED, filled_rect)
+    draw_text(surf, str(health), font_size, x-20, y-5 )
+   
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -65,9 +88,11 @@ class Player(pygame.sprite.Sprite):
         # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT - 50
-        # add a speed propery
+        # add a speed property
         self.speedx = 8
-        
+        # add a health property
+        self.health = 100
+
     def update(self):
         # get the state of all keyboard buttons
         key_pressed = pygame.key.get_pressed()
@@ -167,12 +192,13 @@ bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 for i in range(8):
-    r = Rock()
-    all_sprites.add(r)
-    rocks.add(r)
+    new_rock()
+
 score = 0
 pygame.mixer.music.play()
 running = True
+
+
 
 while running:
     clock.tick(FPS)
@@ -199,15 +225,18 @@ while running:
     for hit in hits:
         random.choice(expl_sounds).play()
         score += hit.radius
-        r = Rock()
-        all_sprites.add(r)
-        rocks.add(r)  
+        new_rock()  
 
     # Check if the player is colliding with any of rocks
-    is_player_disappeared = False
+    is_rock_disappeared = True
     hits = pygame.sprite.spritecollide(player, rocks, 
-                                      is_player_disappeared,
-                                      pygame.sprite.collide_circle)    
+                                      is_rock_disappeared,
+                                      pygame.sprite.collide_circle) 
+    for hit in hits:
+        new_rock()
+        player.health -= int(hit.radius/3)
+        if player.health <=0:
+            running = False   
     # if hits:
     #     # running = False
 
@@ -218,8 +247,8 @@ while running:
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
     draw_text(screen, str(score), 50, WIDTH/2, 10)
-
-
+    font_size = 20
+    draw_health(screen, player.health, 50, 50)
     pygame.display.update()
 
 pygame.quit()
