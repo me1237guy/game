@@ -42,11 +42,11 @@ pygame.mixer.music.set_volume(0.2)
 
 font_name = pygame.font.match_font('arial')
 
-def draw_text(surf, text, size, x, y):
+def draw_text(surf, text, size, x, y, color):
     font = pygame.font.Font(font_name, size)
     use_anti_arial = True
     # draw text on a new Surface
-    text_surface = font.render(text, use_anti_arial, WHITE)
+    text_surface = font.render(text, use_anti_arial, color)
     text_rect = text_surface.get_rect()
     text_rect.centerx = x
     text_rect.top = y
@@ -60,18 +60,24 @@ def new_rock():
 def draw_health(surf, health, x, y):
     if health<0:
         health = 0
-    BAR_LENGTH = 140
+    BAR_LENGTH = 130
     BAR_HEIGHT = 14
     health_bar_length = (health/100)*BAR_LENGTH
     outside_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
     filled_rect  = pygame.Rect(x, y, health_bar_length, BAR_HEIGHT)
     pygame.draw.rect(surf, YELLOW, outside_rect, 3)
     # warning hints
-    if health>40:
+    health_warning_thresh = 40
+    color = YELLOW
+    if health > health_warning_thresh:
         pygame.Surface.fill(surf, GREEN, filled_rect)
     else:
         pygame.Surface.fill(surf, RED, filled_rect)
-    draw_text(surf, str(health), font_size, x-20, y-5 )
+        color = RED
+    offsetX = 20
+    offsetY = -5
+    # draw health value
+    draw_text(surf, str(health), font_size, x + BAR_LENGTH + offsetX, y + offsetY,  color)
    
 
 class Player(pygame.sprite.Sprite):
@@ -232,9 +238,10 @@ while running:
     hits = pygame.sprite.spritecollide(player, rocks, 
                                       is_rock_disappeared,
                                       pygame.sprite.collide_circle) 
+    health_gain = 3
     for hit in hits:
         new_rock()
-        player.health -= int(hit.radius/3)
+        player.health -= int(hit.radius/health_gain)
         if player.health <=0:
             running = False   
     # if hits:
@@ -246,9 +253,9 @@ while running:
 
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
-    draw_text(screen, str(score), 50, WIDTH/2, 10)
+    draw_text(screen, str(score), 50, WIDTH/2, 10, WHITE)
     font_size = 20
-    draw_health(screen, player.health, 50, 50)
+    draw_health(screen, player.health, 10, 20)
     pygame.display.update()
 
 pygame.quit()
