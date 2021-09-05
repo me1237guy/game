@@ -23,7 +23,7 @@ background_img = pygame.image.load(os.path.join("img","background.png")).convert
 player_img = pygame.image.load(os.path.join("img","player.png")).convert()
 player_img_mini = pygame.transform.scale(player_img, (25, 19))
 player_img_mini.set_colorkey(BLACK)
-
+pygame.display.set_icon(player_img_mini)
 # load 7 rock images that will be randomly selected later
 rock_imgs = []
 for i in range(7):
@@ -120,8 +120,10 @@ def draw_init():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                return True
             elif event.type == pygame.KEYUP:
                 waiting = False
+                return False
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -325,7 +327,9 @@ running = True
 while running:
     screen.blit(background_img, (0,0))
     if show_init:
-        draw_init()
+        close = draw_init()
+        if close:
+            break
         show_init = False
         # pygame.sprite.Group():
         # A container that is used to manage multiple Sprite objects. 
