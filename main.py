@@ -1,9 +1,7 @@
 import pygame
 import random  # for generating a bunch of rocks randomly
 import os
-from pygame import draw
 
-from pygame.transform import rotate      # get path for widnows/linux
 FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -23,7 +21,9 @@ clock = pygame.time.Clock()
 # load images
 background_img = pygame.image.load(os.path.join("img","background.png")).convert()
 player_img = pygame.image.load(os.path.join("img","player.png")).convert()
-# rock_img = pygame.image.load(os.path.join("img","rock.png")).convert()
+player_img_mini = pygame.transform.scale(player_img, (25, 19))
+player_img_mini.set_colorkey(BLACK)
+
 # load 7 rock images that will be randomly selected later
 rock_imgs = []
 for i in range(7):
@@ -93,6 +93,14 @@ def draw_health(surf, health, x, y):
     # draw health value
     draw_text(surf, str(health), font_size, x + BAR_LENGTH + offsetX, y + offsetY,  color)
    
+def draw_lives(surf, lives_left, img, x, y):   
+    for i in range(lives_left):
+        # first, get the img's surrounded rectangle
+        img_rect = img.get_rect()
+        img_rect.x = x + 30*i
+        img_rect.y = y
+        # ready to draw img on surf
+        surf.blit(img, img_rect)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -115,7 +123,7 @@ class Player(pygame.sprite.Sprite):
         # add a death count
         self.death_count = 0
         # add a maximum death count
-        self.death_count_max = 3
+        self.death_count_max = 5
         self.is_hidden = False
         self.hidden_time = 0
 
@@ -337,6 +345,7 @@ while running:
     draw_text(screen, str(score), 50, WIDTH/2, 10, WHITE)
     font_size = 20
     draw_health(screen, player.health, 10, 20)
+    draw_lives(screen, player.death_count_max-player.death_count, player_img_mini, WIDTH-160, 15)
     pygame.display.update()
 
 pygame.quit()
