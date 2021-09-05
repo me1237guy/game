@@ -43,6 +43,11 @@ for i in range(9):
     player_expl_img = pygame.image.load(os.path.join("img", f"player_expl{i}.png")).convert()
     player_expl_img.set_colorkey(BLACK)
     expl_anim['player'].append(player_expl_img)
+
+power_imgs={}
+power_imgs['shield'] = pygame.image.load(os.path.join("img", "shield.png")).convert()
+power_imgs['gun'] = pygame.image.load(os.path.join("img","gun.png")).convert()
+
 # load sounds
 shoot_sound = pygame.mixer.Sound(os.path.join("sound","shoot.wav"))
 die_sound   = pygame.mixer.Sound(os.path.join("sound","rumble.ogg"))
@@ -126,8 +131,14 @@ class Player(pygame.sprite.Sprite):
         self.death_count_max = 5
         self.is_hidden = False
         self.hidden_time = 0
+        self.gun = 1
+        self.gun_time = 0
 
     def update(self):
+        now = pygame.time.get_ticks()
+        if self.gun > 1 and now - self.gun_time > 5000:
+            self.gun -= 1
+            self.gun_time = now
         # to show up again when it was hidden
         if self.is_hidden and pygame.time.get_ticks()-self.hidden_time > 1000:
             self.is_hidden = False
@@ -148,17 +159,30 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self):
         if not(self.is_hidden):
-            bullet = Bullet(self.rect.centerx, self.rect.top)
-            all_sprites.add(bullet)
-            bullets.add(bullet)
-            shoot_sound.play()
-    
+            if self.gun == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+                shoot_sound.play()
+            elif self.gun>=2:
+                bulletLeft  = Bullet(self.rect.left, self.rect.centery)
+                bulletRight = Bullet(self.rect.right, self.rect.centery)
+                all_sprites.add(bulletLeft)
+                all_sprites.add(bulletRight)
+                bullets.add(bulletLeft)
+                bullets.add(bulletRight)
+                shoot_sound.play()
+
+
     def hide(self):
         self.is_hidden = True
         self.hidden_time = pygame.time.get_ticks()
         # put the player outside the window
         self.rect.center = (WIDTH/2, HEIGHT+500)
 
+    def gunup(self):
+        self.gun += 1
+        self.gun_time = pygame.time.get_ticks()
 
 class Rock(pygame.sprite.Sprite):
     def __init__(self):
@@ -259,7 +283,20 @@ class Explosion(pygame.sprite.Sprite):
                 # put it back to the previos central position
                 self.rect.center = center
     
-   
+class Power(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.type = random.choice(['shield', 'gun'])
+        self.image = power_imgs[self.type]
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.speedy = 3
+    
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.top > HEIGHT:
+            self.kill()
 # pygame.sprite.Group():
 # A container that is used to manage multiple Sprite objects. 
 all_sprites = pygame.sprite.Group()
@@ -267,6 +304,8 @@ all_sprites = pygame.sprite.Group()
 rocks = pygame.sprite.Group()
 # A group of bullets that is used to collect all bullets
 bullets = pygame.sprite.Group()
+# A group of power 
+powers = pygame.sprite.Group()
 
 player = Player()
 all_sprites.add(player)
@@ -306,6 +345,11 @@ while running:
         expl = Explosion(hit.rect.center, "lg")
         all_sprites.add(expl)
         score += hit.radius
+        possibility = 0.5
+        if random.random() > possibility:
+            pow = Power(hit.rect.center)
+            all_sprites.add(pow)
+            powers.add(pow)
         new_rock()  
 
     # Check if the player is colliding with any of rocks
@@ -328,7 +372,18 @@ while running:
                 player.health = 100
                 player.hide()  
             # else:      
+    
+    is_power_disappeared = True
+    hits = pygame.sprite.spritecollide(player, powers, 
+                                       is_power_disappeared)
 
+    for hit in hits:
+        if hit.type == 'shield':
+            player.health += 10
+            if player.health > 100:
+                player.health = 100
+        elif hit.type == 'gun':
+            player.gunup()
     # 1. player's death count has arrived its maximum value
     # 2. wait to stop running game until the player finished its last explosion
     if player.death_count == player.death_count_max and not(expl_player.alive()):
