@@ -33,14 +33,19 @@ bullet_img = pygame.image.load(os.path.join("img","bullet.png")).convert()
 expl_anim = {}        # initial expl_anim  
 expl_anim['lg'] = []  # lg for large image
 expl_anim['sm'] = []  # sm for small image
+expl_anim['player']=[] # player represnts the player's explosion
 for i in range(9):
     expl_img = pygame.image.load(os.path.join("img", f"expl{i}.png")).convert()
     expl_img.set_colorkey(BLACK)
     expl_anim['lg'].append(pygame.transform.scale(expl_img, (75,75)))
     expl_anim['sm'].append(pygame.transform.scale(expl_img, (30,30)))
-
+    
+    player_expl_img = pygame.image.load(os.path.join("img", f"player_expl{i}.png")).convert()
+    player_expl_img.set_colorkey(BLACK)
+    expl_anim['player'].append(player_expl_img)
 # load sounds
 shoot_sound = pygame.mixer.Sound(os.path.join("sound","shoot.wav"))
+die_sound   = pygame.mixer.Sound(os.path.join("sound","rumble.ogg"))
 expl_sounds = [
     pygame.mixer.Sound(os.path.join("sound", "expl0.wav")),
     pygame.mixer.Sound(os.path.join("sound", "expl1.wav"))
@@ -107,8 +112,19 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 8
         # add a health property
         self.health = 100
+        # add a death count
+        self.death_count = 0
+        # add a maximum death count
+        self.death_count_max = 3
+        self.is_hidden = False
+        self.hidden_time = 0
 
     def update(self):
+        # to show up again when it was hidden
+        if self.is_hidden and pygame.time.get_ticks()-self.hidden_time > 1000:
+            self.is_hidden = False
+            self.rect.centerx = WIDTH/2
+            self.rect.bottom = HEIGHT - 50
         # get the state of all keyboard buttons
         key_pressed = pygame.key.get_pressed()
         if key_pressed[pygame.K_RIGHT]:
@@ -123,10 +139,18 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0   
 
     def shoot(self):
-        bullet = Bullet(self.rect.centerx, self.rect.top)
-        all_sprites.add(bullet)
-        bullets.add(bullet)
-        shoot_sound.play()
+        if not(self.is_hidden):
+            bullet = Bullet(self.rect.centerx, self.rect.top)
+            all_sprites.add(bullet)
+            bullets.add(bullet)
+            shoot_sound.play()
+    
+    def hide(self):
+        self.is_hidden = True
+        self.hidden_time = pygame.time.get_ticks()
+        # put the player outside the window
+        self.rect.center = (WIDTH/2, HEIGHT+500)
+
 
 class Rock(pygame.sprite.Sprite):
     def __init__(self):
@@ -281,14 +305,26 @@ while running:
     hits = pygame.sprite.spritecollide(player, rocks, 
                                       is_rock_disappeared,
                                       pygame.sprite.collide_circle) 
-    health_gain = 3
+    health_gain = 1
     for hit in hits:
         new_rock()
         player.health -= int(hit.radius/health_gain)
-        expl = Explosion(hit.rect.center, "sm")
+        expl = Explosion(hit.rect.center, 'sm')
         all_sprites.add(expl)
         if player.health <=0:
-            running = False   
+            if player.death_count < player.death_count_max:
+                expl_player = Explosion(player.rect.center,'player')
+                all_sprites.add(expl_player)
+                die_sound.play()
+                player.death_count+=1
+                player.health = 100
+                player.hide()  
+            # else:      
+
+    # 1. player's death count has arrived its maximum value
+    # 2. wait to stop running game until the player finished its last explosion
+    if player.death_count == player.death_count_max and not(expl_player.alive()):
+        running = False   
     # if hits:
     #     # running = False
 
