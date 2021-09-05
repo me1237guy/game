@@ -29,6 +29,15 @@ rock_imgs = []
 for i in range(7):
     rock_imgs.append(pygame.image.load(os.path.join("img", f"rock{i}.png")).convert())
 bullet_img = pygame.image.load(os.path.join("img","bullet.png")).convert()
+# use a dictionary
+expl_anim = {}        # initial expl_anim  
+expl_anim['lg'] = []  # lg for large image
+expl_anim['sm'] = []  # sm for small image
+for i in range(9):
+    expl_img = pygame.image.load(os.path.join("img", f"expl{i}.png")).convert()
+    expl_img.set_colorkey(BLACK)
+    expl_anim['lg'].append(pygame.transform.scale(expl_img, (75,75)))
+    expl_anim['sm'].append(pygame.transform.scale(expl_img, (30,30)))
 
 # load sounds
 shoot_sound = pygame.mixer.Sound(os.path.join("sound","shoot.wav"))
@@ -187,6 +196,38 @@ class Bullet(pygame.sprite.Sprite):
            self.kill()     # this automatically removes the bullet from all_sprites
                            # or any group which owns it 
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, size):
+        # center of object that is going to explore
+        # size of explosion
+        pygame.sprite.Sprite.__init__(self)
+        self.size = size
+        # size can be either "sm" or "lg", and zero means the first image
+        self.image = expl_anim[self.size][0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        # record the index of which to play
+        self.frameIndex = 0
+        self.last_update = pygame.time.get_ticks()
+        self.time_to_update = 50  # 50 (ms)
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.time_to_update:
+            self.last_update = now
+            self.frameIndex += 1
+            if self.frameIndex == len(expl_anim[self.size]):
+                self.kill()
+            else:
+                self.image = expl_anim[self.size][self.frameIndex]
+                # get the central position of the old rectangle
+                center = self.rect.center
+                # get the new rectangle after updating self.image
+                self.rect = self.image.get_rect() 
+                # put it back to the previos central position
+                self.rect.center = center
+    
+   
 # pygame.sprite.Group():
 # A container that is used to manage multiple Sprite objects. 
 all_sprites = pygame.sprite.Group()
@@ -230,6 +271,8 @@ while running:
     # Add enough rocks that its amount is equal to the number of collisions                           
     for hit in hits:
         random.choice(expl_sounds).play()
+        expl = Explosion(hit.rect.center, "lg")
+        all_sprites.add(expl)
         score += hit.radius
         new_rock()  
 
@@ -242,6 +285,8 @@ while running:
     for hit in hits:
         new_rock()
         player.health -= int(hit.radius/health_gain)
+        expl = Explosion(hit.rect.center, "sm")
+        all_sprites.add(expl)
         if player.health <=0:
             running = False   
     # if hits:
