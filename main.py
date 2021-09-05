@@ -59,7 +59,7 @@ expl_sounds = [
 pygame.mixer.music.load(os.path.join("sound", "background.ogg"))
 pygame.mixer.music.set_volume(0.2)
 
-font_name = pygame.font.match_font('arial')
+font_name = os.path.join("font.ttf")
 
 def draw_text(surf, text, size, x, y, color):
     font = pygame.font.Font(font_name, size)
@@ -107,6 +107,22 @@ def draw_lives(surf, lives_left, img, x, y):
         # ready to draw img on surf
         surf.blit(img, img_rect)
 
+def draw_init():
+    draw_text(screen, ' Α   Β   Γ   Δ  ', 64, WIDTH/2, HEIGHT/4, WHITE)
+    draw_text(screen, ' Press ← →  to move the plane', 18, WIDTH/2, HEIGHT/2, WHITE)
+    draw_text(screen, ' Press SPACE button to shoot bullets', 18, WIDTH/2, HEIGHT/2 + 40, WHITE)
+    draw_text(screen, ' Press any key to start ', 18, WIDTH/2, HEIGHT*3/4, WHITE)
+    pygame.display.update()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        # get all pygame events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYUP:
+                waiting = False
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -128,7 +144,7 @@ class Player(pygame.sprite.Sprite):
         # add a death count
         self.death_count = 0
         # add a maximum death count
-        self.death_count_max = 5
+        self.death_count_max = 3
         self.is_hidden = False
         self.hidden_time = 0
         self.gun = 1
@@ -297,28 +313,37 @@ class Power(pygame.sprite.Sprite):
         self.rect.y += self.speedy
         if self.rect.top > HEIGHT:
             self.kill()
-# pygame.sprite.Group():
-# A container that is used to manage multiple Sprite objects. 
-all_sprites = pygame.sprite.Group()
-# A group of rocks that is used to collects all rocks
-rocks = pygame.sprite.Group()
-# A group of bullets that is used to collect all bullets
-bullets = pygame.sprite.Group()
-# A group of power 
-powers = pygame.sprite.Group()
 
-player = Player()
-all_sprites.add(player)
-for i in range(8):
-    new_rock()
 
-score = 0
 pygame.mixer.music.play()
+# starting game hints
+show_init = True
 running = True
 
 
 
 while running:
+    screen.blit(background_img, (0,0))
+    if show_init:
+        draw_init()
+        show_init = False
+        # pygame.sprite.Group():
+        # A container that is used to manage multiple Sprite objects. 
+        all_sprites = pygame.sprite.Group()
+        # A group of rocks that is used to collects all rocks
+        rocks = pygame.sprite.Group()
+        # A group of bullets that is used to collect all bullets
+        bullets = pygame.sprite.Group()
+        # A group of power 
+        powers = pygame.sprite.Group()
+
+        player = Player()
+        all_sprites.add(player)
+        for i in range(8):
+            new_rock()
+
+        score = 0
+
     clock.tick(FPS)
     # (1) get all pygame events
     for event in pygame.event.get():
@@ -387,13 +412,14 @@ while running:
     # 1. player's death count has arrived its maximum value
     # 2. wait to stop running game until the player finished its last explosion
     if player.death_count == player.death_count_max and not(expl_player.alive()):
-        running = False   
+        show_init = True
+        # running = False   
     # if hits:
     #     # running = False
 
     # (3) display
     # screen.fill(BLACK)
-    screen.blit(background_img, (0,0))
+   
 
     # draw all objects in all_sprites container
     all_sprites.draw(screen)
